@@ -1,95 +1,149 @@
-# <img src="frontend/public/logo-bps.png" alt="Logo BPS - Web Entries Admin" height="40" style="vertical-align: middle;"> Web Entries Project
+<div align="center">
+  <img src="frontend/public/logo-bps.png" alt="BPS Logo" width="220" />
 
-**Sistem Manajemen & Rekapitulasi Laporan Operasional Kapal Pelabuhan**
+# Web Entries
 
-Project ini adalah solusi modern berbasis web untuk menggantikan proses pelaporan manual. Dibangun dengan **React (Vite)** di frontend dan **FastAPI (Python)** di backend, sistem ini menawarkan performa tinggi, kemudahan penggunaan, dan fleksibilitas dalam pengolahan data.
+Sistem Manajemen & Rekapitulasi Laporan Operasional Kapal Pelabuhan
 
----
-
-## 🌟 Fitur Utama
-
-### 🚢 Operator Area
-- **Dashboard Kinerja**: Visualisasi tren muatan bulanan pribadi.
-- **Formulir Entri Cerdas**: 
-  - Input data kapal, muatan, dan penumpang.
-  - **Auto-fill** untuk komoditas tertentu (misal: "Container (kosong)" otomatis menonaktifkan input detail barang).
-  - Validasi data real-time.
-- **Laporan Saya**: Riwayat entri data dengan status (Submitted, Approved, Rejected).
-- **Cetak Laporan**: Export bukti lapor harian/bulanan.
-
-### 👮 Admin Area
-- **Dashboard Eksekutif**: Ringkasan aktivitas pelabuhan (Total Unit, GRT, LOA) secara *real-time*.
-- **Tren Analisis**: Grafik interaktif (Line Chart) untuk memantau fluktuasi bongkar/muat per komoditas.
-- **Rekap Data Entries**:
-  - Filter canggih berdasarkan kategori pelayaran (Luar Negeri, Dalam Negeri, Perintis, Rakyat).
-  - **Export PDF Resmi**: Laporan rekapitulasi siap cetak dengan format standar BPS.
-  - **Export Excel**: Data mentah untuk analisis lanjutan.
-  - Dukungan penuh untuk perhitungan statistik kontainer (20ft, 40ft, Tonase).
-- **Manajemen User**: Tambah/Edit/Hapus/Reset Password akun operator.
+</div>
 
 ---
 
-## 🏗️ Teknologi yang Digunakan
+## 📌 Project Overview
+
+Web Entries adalah aplikasi full-stack untuk pencatatan dan rekapitulasi laporan operasional kapal. Sistem menyediakan alur kerja **Operator** (entry data berbasis spreadsheet) dan **Admin** (rekap, dashboard, dan manajemen operator) dengan API berbasis **FastAPI + MySQL**.
+
+---
+
+## ✨ Key Features
+
+### 🧾 Operator
+
+- Spreadsheet-style input per kategori pelayaran: **Luar Negeri / Dalam Negeri / Perintis / Rakyat**
+- Dynamic rows + safety logic (hindari spam baris kosong)
+- Ringkasan otomatis per kategori (LOA, GRT, total muatan, satuan unik, deskripsi gabungan)
+- Auto-mapping **Komoditas → Satuan** + placeholder amount yang adaptif
+- Autosave draft (debounce) + submit manual batch ke backend
+
+### 🧭 Admin
+
+- Rekap per kategori & periode (screen view dan full view)
+- Dashboard ringkas dan tren (berbasis query agregasi)
+- Manajemen operator (ADMIN-only)
+- Audit/log endpoint untuk kebutuhan operasional
+
+---
+
+## 🏛️ System Architecture
+
+```text
+React (Vite) ──HTTP /api──> FastAPI ──SQL──> MySQL
+     │                       │
+     ├─ Axios (Bearer JWT)   ├─ Routers (Auth/Entries/Admin/Dashboard/Operators)
+     └─ Spreadsheet UI       └─ Raw SQL (mysql-connector-python)
+```
+
+Detail lengkap: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+---
+
+## 🧰 Technology Stack
 
 ### Frontend
-- **Core**: React 19, Vite
-- **UI Framework**: Tailwind CSS 3.4
-- **State Management**: React Hooks
-- **Charting**: Recharts
-- **HTTP Client**: Axios
-- **Icons**: Lucide React
+
+- React 19, Vite
+- TailwindCSS
+- Axios
+- Recharts
 
 ### Backend
-- **Core**: FastAPI (Python 3.10+)
-- **Database**: MySQL 8.0 / MariaDB
-- **ORM/Driver**: mysql-connector-python (Raw SQL optimized for complex reporting)
-- **Authentication**: JWT (JSON Web Token) + BCrypt Password Hashing
-- **Reporting**: ReportLab (PDF Generation), OpenPyXL (Excel)
+
+- FastAPI (Python)
+- MySQL (raw SQL via mysql-connector-python)
+- JWT Authentication (python-jose + passlib/bcrypt)
 
 ---
 
-## 🚀 Memulai Project (Quick Start)
+## 🖼️ Screenshots
 
-Panduan lengkap instalasi dapat dilihat di **[docs/SETUP.md](docs/SETUP.md)**.
-
-### Ringkasan Langkah:
-1.  **Database**: Buat database `db_entries`.
-2.  **Backend**:
-    ```bash
-    cd backend
-    python -m venv venv
-    venv\Scripts\activate  # Windows
-    pip install -r requirements.txt
-    python setup_db.py     # Buat tabel
-    python seed_direct.py  # Isi data awal
-    python main.py         # Jalankan server (Port 8001)
-    ```
-3.  **Frontend**:
-    ```bash
-    cd frontend
-    npm install
-    npm run dev            # Jalankan web (Port 5173)
-    ```
+- Operator Entry Page (Spreadsheet UI): _TODO_
+- Admin Rekap Dashboard: _TODO_
+- PDF/Export: _TODO_
 
 ---
 
-## 📂 Struktur Folder
+## ⚡ Installation (Quick Start)
 
-Project ini menggunakan struktur monorepo sederhana:
-- `/backend`: Kode sumber API server, logika bisnis, dan koneksi database.
-- `/frontend`: Kode sumber aplikasi web React.
-- `/database`: Skema SQL (`schema.sql`) untuk referensi manual.
-- `/docs`: Dokumentasi teknis lengkap.
+Panduan lengkap: [docs/SETUP.md](docs/SETUP.md)
+
+### 1) Database
+
+```sql
+CREATE DATABASE db_entries;
+```
+
+### 2) Backend (FastAPI)
+
+```bash
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+
+python setup_db.py
+python seed_direct.py
+python main.py
+```
+
+Backend default:
+
+- API base: `http://localhost:8001/api`
+- Swagger: `http://localhost:8001/docs`
+
+### 3) Frontend (React/Vite)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend default:
+
+- App: `http://localhost:5173`
+- Dev proxy: `/api` → `http://localhost:8001`
 
 ---
 
-## 📝 Catatan Pembaruan (Changelog)
+## �️ Folder Structure
 
-Lihat **[docs/CHANGELOG.md](docs/CHANGELOG.md)** untuk riwayat perubahan terbaru, perbaikan bug, dan penambahan fitur.
+Ringkasan struktur repository:
+
+- [backend/](backend) — FastAPI app, routers, auth, DB access
+- [frontend/](frontend) — React app (feature-based)
+- [database/](database) — SQL schema referensi
+- [docs/](docs) — dokumentasi teknis
+
+Detail: [docs/STRUCTURE.md](docs/STRUCTURE.md)
 
 ---
 
-## 👥 Kontributor & Lisensi
+## � Documentation Links
 
-Dikembangkan untuk **Badan Pusat Statistik (BPS) Pelabuhan Indonesia**.
-*Versi 2.0.0 Enterprise Edition*
+- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- API Reference: [docs/API.md](docs/API.md)
+- Setup Guide: [docs/SETUP.md](docs/SETUP.md)
+- Database: [docs/DATABASE.md](docs/DATABASE.md)
+- Security: [docs/SECURITY.md](docs/SECURITY.md)
+
+---
+
+## 🧾 Changelog
+
+Lihat: [docs/CHANGELOG.md](docs/CHANGELOG.md)
+
+---
+
+## 🏢 Organization
+
+Dikembangkan untuk kebutuhan operasional **Badan Pusat Statistik (BPS)**.

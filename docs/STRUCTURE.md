@@ -1,78 +1,115 @@
-# Struktur Folder Project
+# Repository Structure
 
-Berikut adalah struktur folder terbaru yang mencerminkan kondisi terkini project **Web Entries**.
+Dokumen ini menjelaskan struktur folder repository **Web Entries** sesuai kondisi kode saat ini.
 
-## 📂 Root Directory
-```
-d:/web-entries/
-├── backend/               # Kode sumber Backend (Python/FastAPI)
-├── frontend/              # Kode sumber Frontend (React/Vite)
-├── database/              # Skema SQL manual
-└── docs/                  # Dokumentasi Project (Anda berada di sini)
+---
+
+## 📦 Repository Tree (High-Level)
+
+```text
+d:\web-entries\
+├─ backend\
+│  ├─ app\
+│  │  ├─ core\
+│  │  ├─ routers\
+│  │  ├─ schemas\
+│  │  ├─ services\
+│  │  ├─ utils\
+│  │  └─ main.py
+│  ├─ tests\
+│  ├─ requirements.txt
+│  ├─ main.py
+│  ├─ setup_db.py
+│  ├─ seed_direct.py
+│  ├─ clear_data.py
+│  └─ seed_*.py / check_*.py (utility scripts)
+├─ frontend\
+│  ├─ public\
+│  ├─ src\
+│  │  ├─ assets\
+│  │  ├─ components\
+│  │  ├─ config\
+│  │  ├─ context\
+│  │  ├─ features\
+│  │  ├─ lib\
+│  │  ├─ pages\
+│  │  ├─ services\
+│  │  ├─ test\
+│  │  ├─ utils\
+│  │  ├─ App.jsx
+│  │  └─ main.jsx
+│  ├─ package.json
+│  ├─ vite.config.js
+│  └─ tailwind.config.js
+├─ database\
+│  └─ schema.sql
+└─ docs\
+   ├─ API.md
+   ├─ SETUP.md
+   ├─ STRUCTURE.md
+   └─ CHANGELOG.md
 ```
 
-## 🖥️ Backend Structure (`/backend`)
-Backend menggunakan arsitektur modular dengan pemisahan *Router-Service-Core*.
+Catatan:
+- Artefak lokal seperti `frontend/node_modules` dan `backend/venv` tidak perlu masuk repository.
 
-```
-backend/
-├── app/
-│   ├── core/              # Konfigurasi inti
-│   │   ├── config.py      # Load env vars (DB_HOST, SECRET_KEY)
-│   │   ├── database.py    # Koneksi Database MySQL
-│   │   └── security.py    # Logic Auth (JWT, Password Hash)
-│   │
-│   ├── routers/           # API Endpoints (Controller)
-│   │   ├── auth.py        # Login & User Info
-│   │   ├── entries.py     # CRUD Data Kapal (Operator)
-│   │   ├── admin.py       # Fitur Admin (Rekap, User Mgmt, Auto-submit logs)
-│   │   └── dashboard.py   # Data Visualisasi Dashboard & Tren
-│   │
-│   ├── schemas/           # Pydantic Models (Validation)
-│   │   └── schemas.py     # Request/Response Models
-│   │
-│   ├── services/          # Business Logic
-│   │   └── seeder.py      # Logic Generate Dummy Data (Internal)
-│   │
-│   └── main.py            # Entry Point Aplikasi (FastAPI instance)
-│
-├── .env                   # File Environment Variables (Rahasia)
-├── requirements.txt       # Daftar Library Python
-├── main.py                # Script Runner (Uvicorn wrapper)
-├── setup_db.py            # Script inisialisasi tabel database
-├── seed_direct.py         # Script seeding data (Admin + Dummy Data)
-└── clear_data.py          # Script pembersihan data transaksi (Reset)
-```
+---
 
-## 🎨 Frontend Structure (`/frontend`)
-Frontend menggunakan pendekatan **Feature-Based** untuk memisahkan domain logika dan komponen.
+## 🧠 Backend Architecture (FastAPI Modular Monolith)
 
-```
-frontend/src/
-├── features/              # PENGELOMPOKAN FITUR UTAMA
-│   ├── auth/              # Fitur Otentikasi
-│   │   ├── pages/         # Halaman Login
-│   │   └── components/    # ProtectedRoute
-│   │
-│   ├── admin/             # Fitur Admin
-│   │   ├── pages/         # Dashboard, Rekap Entries, User Mgmt
-│   │   └── components/    # Komponen Admin (RekapTable, UserForm)
-│   │
-│   └── operator/          # Fitur Operator
-│       ├── pages/         # Entry Form, Dashboard Operator, Laporan Saya
-│       └── components/    # Komponen Operator (EntryForm, HistoryTable)
-│
-├── components/            # KOMPONEN SHARED
-│   ├── layout/            # Layout Global (Sidebar, Topbar)
-│   ├── shared/            # Komponen Umum (SummaryCard, Modal)
-│   └── ui/                # UI Primitives (Button, Input, Select)
-│
-├── services/              # API LOGIC
-│   └── api.js             # Centralized Axios & Endpoint Functions
-│
-├── context/               # STATE MANAGEMENT
-│   └── AuthContext.jsx    # Global User State (Login/Logout)
-│
-├── App.jsx                # Routing Utama (React Router)
-└── main.jsx               # Entry Point React
-```
+### `backend/app/core/`
+Konfigurasi dan komponen inti:
+- `config.py` — memuat environment variables (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, SECRET_KEY, dll)
+- `database.py` — helper koneksi MySQL (`get_db_connection()`)
+- `security.py` — JWT + password hashing + dependency `get_current_user()`
+- `bcrypt_fix.py` — patch kompatibilitas passlib/bcrypt
+
+### `backend/app/routers/`
+Router API. Seluruh router di-include dengan prefix `/api` di `app/main.py`.
+- `auth.py` — login dan `/users/me`
+- `entries.py` — history entries, CRUD entry, batch submit, manual submit
+- `admin.py` — rekap, export support, seed sample, audit/logs
+- `dashboard.py` — statistik dan tren
+- `operators.py` — manajemen operator (ADMIN-only)
+
+### `backend/app/schemas/`
+Pydantic models (request/response validation):
+- `ShipEntry`, `EntryUpdate`, `SubmitRequest`, `UserLogin`, `Token`, dll
+
+### `backend/app/services/`
+Business logic dan helper (contoh: seeder internal).
+
+---
+
+## 🎨 Frontend Architecture (React Feature-Based)
+
+### `frontend/src/features/`
+Organisasi berdasarkan domain bisnis:
+- `features/auth/` — login + route protection
+- `features/operator/` — spreadsheet entry, laporan operator, dashboard operator
+- `features/admin/` — dashboard admin, rekap, operator management, PDF viewer
+
+### `frontend/src/components/`
+Shared UI dan layout:
+- `layout/` — Sidebar, Topbar, AdminLayout
+- `shared/` — komponen reusable
+- `ui/` — UI primitives
+
+### `frontend/src/services/`
+Integrasi API (axios instance + fungsi endpoint): `services/api.js`
+
+### `frontend/src/context/`
+Global auth state: `AuthContext.jsx`
+
+---
+
+## 🧰 Utility Scripts (Backend Root)
+
+### `setup_db.py`
+Inisialisasi database (pembuatan tabel).
+
+### `seed_direct.py`
+Seeding cepat untuk akun default dan pembersihan data operasional.
+
+### `clear_data.py`
+Menghapus data transaksi (entries/log tertentu) tanpa menghapus akun user.
