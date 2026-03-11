@@ -107,108 +107,7 @@ const DetailReportPage = () => {
 
         {/* Content Body */}
         <div className="p-10 space-y-10">
-          {/* Section 1: Identitas Kapal */}
-          <section>
-            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 flex items-center gap-2">
-              <Ship size={16} /> Identitas Kapal
-            </h2>
-            <div className="grid grid-cols-2 gap-y-6 gap-x-12">
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                  Nama Kapal
-                </label>
-                <div className="text-lg font-bold text-slate-800">
-                  {data.nama_kapal}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                  Bendera
-                </label>
-                <div className="text-lg font-semibold text-slate-700 flex items-center gap-2">
-                  <Flag size={16} className="text-slate-400" />
-                  {data.bendera || "-"}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                  Pemilik / Agen
-                </label>
-                <div className="text-base font-medium text-slate-700">
-                  {data.pemilik_agen || "-"}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                    LOA (Meter)
-                  </label>
-                  <div className="text-base font-mono font-bold text-slate-800">
-                    {parseFloat(data.loa).toLocaleString("id-ID")}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                    GRT
-                  </label>
-                  <div className="text-base font-mono font-bold text-slate-800">
-                    {parseFloat(data.grt).toLocaleString("id-ID")}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Section 2: Rute & Jadwal */}
-          <section>
-            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 flex items-center gap-2">
-              <Navigation size={16} /> Rute & Jadwal
-            </h2>
-            <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-              <div className="grid grid-cols-2 gap-8 mb-6 relative">
-                {/* Connector Line */}
-                <div className="absolute left-1/2 top-4 bottom-4 w-px bg-slate-300 transform -translate-x-1/2 hidden md:block"></div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                    Pelabuhan Asal
-                  </label>
-                  <div className="text-lg font-bold text-slate-800 mb-4">
-                    {data.pelabuhan_asal}
-                  </div>
-
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                    Tanggal Kedatangan
-                  </label>
-                  <div className="text-sm font-medium text-slate-600 flex items-center gap-2">
-                    <Calendar size={14} />
-                    {data.tanggal_tambat
-                      ? new Date(data.tanggal_tambat).toLocaleString("id-ID")
-                      : "-"}
-                  </div>
-                </div>
-
-                <div className="text-right md:text-left md:pl-8">
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                    Pelabuhan Tujuan
-                  </label>
-                  <div className="text-lg font-bold text-slate-800 mb-4">
-                    {data.pelabuhan_tujuan}
-                  </div>
-
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
-                    Lokasi Dermaga
-                  </label>
-                  <div className="text-sm font-medium text-slate-600 flex items-center gap-2 md:justify-start justify-end">
-                    <MapPin size={14} />
-                    {data.dermaga || "-"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Section 3: Detail Muatan */}
+          {/* Section 1: Detail Muatan */}
           <section>
             <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 flex items-center gap-2">
               <Box size={16} /> Detail Muatan
@@ -253,6 +152,48 @@ const DetailReportPage = () => {
                   {data.jenis_kemasan &&
                     data.jenis_kemasan !== "-" &&
                     ` • ${data.jenis_kemasan}`}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 2: Informasi Tambahan */}
+          <section>
+            <h2 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2 flex items-center gap-2">
+              <FileText size={16} /> Informasi Tambahan
+            </h2>
+            <div className="grid grid-cols-2 gap-y-6 gap-x-12">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
+                    LOA (Meter)
+                  </label>
+                  <div className="text-base font-mono font-bold text-slate-800">
+                    {parseFloat(data.loa).toLocaleString("id-ID")}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
+                    GRT
+                  </label>
+                  <div className="text-base font-mono font-bold text-slate-800">
+                    {parseFloat(data.grt).toLocaleString("id-ID")}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">
+                  Tanggal Laporan
+                </label>
+                <div className="text-base font-medium text-slate-700 flex items-center gap-2">
+                  <Calendar size={16} className="text-slate-400" />
+                  {data.tanggal_laporan
+                    ? new Date(data.tanggal_laporan).toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : "-"}
                 </div>
               </div>
             </div>

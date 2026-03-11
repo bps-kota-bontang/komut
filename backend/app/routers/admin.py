@@ -32,11 +32,9 @@ def get_auto_submit_logs(
             SELECT 
                 se.id,
                 se.submitted_at,
-                se.tanggal_kedatangan,
+                se.tanggal_laporan,
                 se.operator_id,
                 u.nama as operator_name,
-                se.nama_kapal,
-                se.bendera,
                 se.loa,
                 se.jenis_kegiatan
             FROM ship_entries se
@@ -47,18 +45,18 @@ def get_auto_submit_logs(
         
         params = []
         
-        # Apply Search (Operator Name or Ship Name)
+        # Apply Search (Operator Name)
         if search:
-            base_query += " AND (u.nama LIKE %s OR se.nama_kapal LIKE %s)"
-            params.extend([f"%{search}%", f"%{search}%"])
+            base_query += " AND u.nama LIKE %s"
+            params.append(f"%{search}%")
             
-        # Apply Time Filter (Based on Tanggal Kedatangan / Operasional)
+        # Apply Time Filter (Based on Tanggal Laporan)
         if filter == '7_days':
-            base_query += " AND se.tanggal_kedatangan >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
+            base_query += " AND se.tanggal_laporan >= DATE_SUB(NOW(), INTERVAL 7 DAY)"
         elif filter == '30_days':
-            base_query += " AND se.tanggal_kedatangan >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+            base_query += " AND se.tanggal_laporan >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
         elif filter == 'today':
-             base_query += " AND DATE(se.tanggal_kedatangan) = CURDATE()"
+             base_query += " AND DATE(se.tanggal_laporan) = CURDATE()"
         
         # Count Total Data (for pagination) - BEFORE ORDER/LIMIT
         count_sql = f"SELECT COUNT(*) as total FROM ({base_query}) as sub"
@@ -66,11 +64,11 @@ def get_auto_submit_logs(
         total_rows = cursor.fetchone()['total']
         total_pages = (total_rows + limit - 1) // limit
         
-        # Sorting (Newest Operational Date First)
+        # Sorting (Newest Report Date First)
         if sort == 'oldest':
-            base_query += " ORDER BY se.tanggal_kedatangan ASC, se.submitted_at ASC"
+            base_query += " ORDER BY se.tanggal_laporan ASC, se.submitted_at ASC"
         else:
-            base_query += " ORDER BY se.tanggal_kedatangan DESC, se.submitted_at DESC"
+            base_query += " ORDER BY se.tanggal_laporan DESC, se.submitted_at DESC"
             
         # Pagination
         base_query += " LIMIT %s OFFSET %s"
@@ -81,11 +79,11 @@ def get_auto_submit_logs(
         
         # Format date for frontend
         for row in data:
-            # Prioritize 'tanggal_kedatangan' for display date
-            if row['tanggal_kedatangan']:
-                row['date'] = row['tanggal_kedatangan'].strftime('%Y-%m-%d')
+            # Prioritize 'tanggal_laporan' for display date
+            if row['tanggal_laporan']:
+                row['date'] = row['tanggal_laporan'].strftime('%Y-%m-%d')
             elif row['submitted_at']:
-                # Fallback if no arrival date
+                # Fallback if no report date (though required in DB)
                 row['date'] = row['submitted_at'].strftime('%Y-%m-%d')
                 
             if row['submitted_at']:
@@ -402,7 +400,6 @@ def get_all_rekap_entries(
                 teus_20_box,
                 teus_40_box,
                 container_status,
-                nama_kapal,
                 grt,
                 loa
             FROM ship_entries
@@ -411,9 +408,6 @@ def get_all_rekap_entries(
         """
         cursor.execute(sql, (start_date, end_date))
         rows = cursor.fetchall()
-        
-        # Track unique ships for Header stats
-        unique_ships = {cat: set() for cat in categories}
         
         for r in rows:
             cat = r['kategori_pelayaran']
@@ -424,11 +418,9 @@ def get_all_rekap_entries(
             j_muatan = r['jenis_muatan'] # Barang / Hewan / Manusia
             
             # 1. Header Stats
-            if r['nama_kapal'] not in unique_ships[cat]:
-                unique_ships[cat].add(r['nama_kapal'])
-                result[cat]['header']['unit'] += 1
-                result[cat]['header']['total_grt'] += float(r['grt'] or 0)
-                result[cat]['header']['total_loa'] += float(r['loa'] or 0)
+            result[cat]['header']['unit'] += 1
+            result[cat]['header']['total_grt'] += float(r['grt'] or 0)
+            result[cat]['header']['total_loa'] += float(r['loa'] or 0)
             
             # 2. Penumpang
             if j_muatan == 'Manusia':
@@ -576,8 +568,8 @@ def get_admin_dashboard_summary(
             SELECT 
                 COUNT(*) as total_unit
             FROM ship_entries 
-            WHERE MONTH(tanggal_kedatangan) = %s
-              AND YEAR(tanggal_kedatangan) = %s
+            WHERE MONTH(tanggal_laporan) = %s
+              AND YEAR(tanggal_laporan) = %s
               AND status IN ('SUBMITTED', 'APPROVED')
         """
         cursor.execute(global_sql, (bulan, tahun))
@@ -588,8 +580,8 @@ def get_admin_dashboard_summary(
         submitted_sql = """
             SELECT COUNT(*) as total_submitted
             FROM ship_entries 
-            WHERE MONTH(tanggal_kedatangan) = %s
-              AND YEAR(tanggal_kedatangan) = %s
+            WHERE MONTH(tanggal_laporan) = %s
+              AND YEAR(tanggal_laporan) = %s
               AND status IN ('SUBMITTED', 'APPROVED')
         """
         cursor.execute(submitted_sql, (bulan, tahun))

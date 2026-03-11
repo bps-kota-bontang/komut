@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
+import { Trash2 } from "lucide-react";
 import { submitEntries } from "../../../services/api";
 const CATEGORIES = [
   { key: "luar_negeri", title: "Luar Negeri" },
@@ -36,15 +37,30 @@ const JENIS_KEMASAN_OPTIONS = [
   "Lainnya",
 ];
 
-const TableField = ({ children }) => (
-  <td className="px-3 py-3 align-top border-t border-slate-200">{children}</td>
+const TableField = ({ children, className = "" }) => (
+  <td className={`px-3 py-3 align-top border-t border-slate-200 ${className}`}> {children} </td>
 );
 
 TableField.propTypes = {
   children: PropTypes.node,
+  className: PropTypes.string,
+};
+
+// Deprecated ship fields kept for backend compatibility
+// Will be removed after database migration
+const deprecatedShipFields = {
+  nama_kapal: "",
+  negara: "",
+  kepemilikan: "",
+  tiba_pelabuhan: "",
+  pelabuhan_tujuan: "",
+  tanggal_keberangkatan: "",
+  tanggal_kedatangan: "",
+  tambat: "",
 };
 
 const createEmptyRow = () => ({
+  ...deprecatedShipFields,
   loa: 0,
   grt: 0,
   activity: "",
@@ -118,7 +134,30 @@ const EntryCategoryCard = ({
   isDisabled,
   onRowActivate,
   onRowChange,
+  onRowDelete,
 }) => {
+  const tableRef = useRef(null);
+
+  const handleEnterNavigation = (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const focusable = Array.from(
+      tableRef.current.querySelectorAll(
+        "input:not([disabled]), select:not([disabled])"
+      )
+    );
+    const idx = focusable.indexOf(e.target);
+    if (idx >= 0) {
+      const next = focusable[idx + 1];
+      if (next) {
+        next.focus();
+      } else {
+        // at end of table; add a new row if allowed
+        const lastRowIndex = rows.length - 1;
+        onRowActivate(lastRowIndex);
+      }
+    }
+  };
   const dataRows = rows.filter(hasRowData);
 
   const totalLoa = dataRows.reduce(
@@ -148,11 +187,16 @@ const EntryCategoryCard = ({
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-soft border border-slate-100">
-      <div className="mb-4 border-b border-slate-100 pb-4">
-        <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+      {/* Cargo Detail Header (Simplified) */}
+      <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-bold text-slate-800">
+            Detail Muatan ({title})
+          </h3>
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" ref={tableRef}>
         <table className="w-full min-w-[1100px] border border-slate-200 rounded-lg overflow-hidden">
           <thead className="bg-slate-50">
             <tr className="text-left text-xs font-bold text-slate-600 uppercase tracking-wide">
@@ -164,6 +208,7 @@ const EntryCategoryCard = ({
               <th className="px-3 py-3">Jumlah/Massa/Penumpang</th>
               <th className="px-3 py-3">Satuan</th>
               <th className="px-3 py-3">Jenis Kemasan</th>
+              <th className="px-3 py-3 text-center">Aksi</th>
             </tr>
           </thead>
           <tbody className="bg-white">
@@ -177,6 +222,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.loa}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) =>
                       onRowChange(
                         rowIndex,
@@ -194,6 +240,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.grt}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) =>
                       onRowChange(
                         rowIndex,
@@ -209,6 +256,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.activity}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) =>
                       onRowChange(rowIndex, "activity", e.target.value)
                     }
@@ -227,6 +275,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.commodity}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) => {
                       const nextCommodity = e.target.value;
                       onRowChange(rowIndex, "commodity", nextCommodity);
@@ -250,6 +299,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.description}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) =>
                       onRowChange(rowIndex, "description", e.target.value)
                     }
@@ -263,6 +313,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.amount}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) =>
                       onRowChange(
                         rowIndex,
@@ -278,6 +329,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.unit}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) =>
                       onRowChange(rowIndex, "unit", e.target.value)
                     }
@@ -296,6 +348,7 @@ const EntryCategoryCard = ({
                     disabled={isDisabled}
                     value={row.packaging}
                     onFocus={() => onRowActivate(rowIndex)}
+                    onKeyDown={handleEnterNavigation}
                     onChange={(e) =>
                       onRowChange(rowIndex, "packaging", e.target.value)
                     }
@@ -307,6 +360,18 @@ const EntryCategoryCard = ({
                       </option>
                     ))}
                   </select>
+                </TableField>
+                <TableField className="text-center">
+                  {!isDisabled && (
+                    <button
+                      type="button"
+                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      title="Hapus baris"
+                      onClick={() => onRowDelete(rowIndex)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </TableField>
               </tr>
             ))}
@@ -379,10 +444,11 @@ EntryCategoryCard.propTypes = {
   isDisabled: PropTypes.bool,
   onRowActivate: PropTypes.func.isRequired,
   onRowChange: PropTypes.func.isRequired,
+  onRowDelete: PropTypes.func,
 };
 
 const EntryForm = (props) => {
-  const { isDisabled } = props;
+  const { isDisabled, entryMonth, entryYear } = props;
   const [entries, setEntries] = useState(createInitialEntriesState);
   const [draftStatus, setDraftStatus] = useState("saved");
   const isFirstRenderRef = useRef(true);
@@ -417,13 +483,41 @@ const EntryForm = (props) => {
     });
   };
 
+  const handleRowDelete = (categoryKey, rowIndex) => {
+    setDraftStatus("saving");
+    setEntries((prev) => {
+      const newRows = prev[categoryKey].filter((_, idx) => idx !== rowIndex);
+      return {
+        ...prev,
+        [categoryKey]: newRows.length ? newRows : [createEmptyRow()],
+      };
+    });
+  };
+
   const handleSubmitData = async () => {
     setSubmitError("");
+
+    // Helper to normalize rows and ensure deprecated fields are sent as empty strings
+    const normalizeRows = (rows) =>
+      rows.filter(hasRowData).map((row) => ({
+        ...row,
+        nama_kapal: row.nama_kapal || "",
+        negara: row.negara || "",
+        kepemilikan: row.kepemilikan || "",
+        tiba_pelabuhan: row.tiba_pelabuhan || "",
+        pelabuhan_tujuan: row.pelabuhan_tujuan || "",
+        tanggal_keberangkatan: row.tanggal_keberangkatan || "",
+        tanggal_kedatangan: row.tanggal_kedatangan || "",
+        tambat: row.tambat || "",
+      }));
+
     const payload = {
-      luar_negeri: entries.luar_negeri.filter(hasRowData),
-      dalam_negeri: entries.dalam_negeri.filter(hasRowData),
-      perintis: entries.perintis.filter(hasRowData),
-      rakyat: entries.rakyat.filter(hasRowData),
+      luar_negeri: normalizeRows(entries.luar_negeri),
+      dalam_negeri: normalizeRows(entries.dalam_negeri),
+      perintis: normalizeRows(entries.perintis),
+      rakyat: normalizeRows(entries.rakyat),
+      entri_bulan: entryMonth,
+      entri_tahun: entryYear,
     };
 
     try {
@@ -489,6 +583,7 @@ const EntryForm = (props) => {
           onRowChange={(rowIndex, field, value) =>
             updateRowField(c.key, rowIndex, field, value)
           }
+          onRowDelete={(rowIndex) => handleRowDelete(c.key, rowIndex)}
         />
       ))}
     </div>
@@ -497,6 +592,8 @@ const EntryForm = (props) => {
 
 EntryForm.propTypes = {
   isDisabled: PropTypes.bool,
+  entryMonth: PropTypes.number,
+  entryYear: PropTypes.number,
 };
 
 export default EntryForm;

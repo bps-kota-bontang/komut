@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Add navigate
-import { getEntries } from "../../../services/api";
+import { getEntries, deleteEntry } from "../../../services/api";
 import {
   FileText,
   Search,
   Eye,
   Ship,
+  Trash2,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import SummaryCard from "../../../components/shared/SummaryCard";
 
@@ -80,6 +82,20 @@ const DataPage = () => {
     return matchesSearch;
   });
 
+  // delete handler
+  const handleDelete = async (id) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus baris ini?")) return;
+    try {
+      await deleteEntry(id);
+      toast.success("Data berhasil dihapus");
+      // remove locally
+      setData((prev) => prev.filter((item) => item.id !== id));
+    } catch (err) {
+      console.error("Gagal menghapus entri:", err);
+      toast.error("Gagal menghapus data");
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in p-8">
       {/* Header Section */}
@@ -103,7 +119,7 @@ const DataPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Cari nama kapal..."
+              placeholder="Cari entri..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
@@ -117,8 +133,6 @@ const DataPage = () => {
             <thead className="bg-slate-50 text-slate-600 font-semibold uppercase text-xs">
               <tr>
                 <th className="px-6 py-4">Tanggal Input & Jenis</th>
-                <th className="px-6 py-4">Nama Kapal / Bendera</th>
-                <th className="px-6 py-4">Rute & Dermaga</th>
                 <th className="px-6 py-4 text-right">LOA (m)</th>
                 <th className="px-6 py-4 text-right">GRT</th>
                 <th className="px-6 py-4">Kegiatan</th>
@@ -128,7 +142,7 @@ const DataPage = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="5" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
                       <p className="text-slate-500 font-medium">
@@ -139,7 +153,7 @@ const DataPage = () => {
                 </tr>
               ) : displayData.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="5" className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center gap-3">
                       <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
                         <Ship className="w-6 h-6 text-slate-400" />
@@ -174,30 +188,6 @@ const DataPage = () => {
                       </div>
                     </td>
 
-                    {/* Nama Kapal & Bendera */}
-                    <td className="px-6 py-4">
-                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-800">
-                          {item.nama_kapal}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {item.bendera || "-"}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Rute & Dermaga */}
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col max-w-[150px]">
-                        <span className="text-slate-800 text-xs truncate">
-                          {item.pelabuhan_asal || "?"} → {item.pelabuhan_tujuan || "?"}
-                        </span>
-                        <span className="text-xs text-blue-600 mt-0.5 truncate">
-                          {item.dermaga || "-"}
-                        </span>
-                      </div>
-                    </td>
-
                     {/* LOA */}
                     <td className="px-6 py-4 text-right font-mono text-slate-700">
                       {parseFloat(item.loa || 0).toLocaleString("id-ID")}
@@ -223,13 +213,22 @@ const DataPage = () => {
 
                     {/* Aksi */}
                     <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => navigate(`/laporan/detail/${item.id}`)}
-                        className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
-                        title="Lihat Detail"
-                      >
-                        <Eye size={18} />
-                      </button>
+                      <div className="inline-flex space-x-1">
+                        <button
+                          onClick={() => navigate(`/laporan/detail/${item.id}`)}
+                          className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                          title="Lihat Detail"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                          title="Hapus Entry"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

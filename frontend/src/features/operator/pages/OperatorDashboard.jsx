@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getYearlySummary, getDashboardTrend } from "../../../services/api";
+import { 
+  getYearlySummary, 
+  getDashboardTrend
+} from "../../../services/api";
 import SummaryCard from "../../../components/shared/SummaryCard";
 import {
   Ship,
@@ -21,50 +24,40 @@ import {
 } from "recharts";
 import { useAuth } from "../../../context/AuthContext";
 
-const CARGO_COLORS = {
-  "AMM. NITRATE": "#FACC15", // Yellow-400
-  AMONIA: "#A855F7", // Purple-500
-  LNG: "#3B82F6", // Blue-500
-  LPG: "#EF4444", // Red-500
-  PUPUK: "#22C55E", // Green-500
-  // Fallbacks
-  BARANG: "#64748B",
-  DEFAULT: "#94A3B8",
-};
+const CARGO_COLORS = [
+  "#2563EB", // Blue-600
+  "#22C55E", // Green-500
+  "#F59E0B", // Amber-500
+  "#EF4444", // Red-500
+  "#8B5CF6", // Purple-500
+  "#06B6D4", // Cyan-500
+];
 
 const getColor = (name, index) => {
-  if (CARGO_COLORS[name]) return CARGO_COLORS[name];
-  const colors = [
-    "#F58220", // Orange
-    "#E11D48", // Pink
-    "#0072CE", // Primary
-    "#6DBE45", // Success
-    "#0F2A44", // Dark
-  ];
-  return colors[index % colors.length];
+  return CARGO_COLORS[index % CARGO_COLORS.length];
 };
 
 // Custom Tooltip for Trend (Line Chart)
 const CustomTrendTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-surface-card p-4 rounded-lg shadow-elevation border border-surface-divider min-w-[200px]">
-        <p className="text-sm font-bold text-foreground border-b border-surface-divider pb-2 mb-2 text-center">
-          {label}
+      <div className="bg-white p-4 rounded-xl shadow-lg border border-slate-100 min-w-[200px]">
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b pb-1">
+          Bulan: {label}
         </p>
         <div className="space-y-2">
           {payload.map((entry, idx) => (
-            <div key={idx} className="flex justify-between items-center gap-3 text-xs">
-              <span style={{ color: entry.color }} className="font-semibold">
-                {entry.name} :
+            <div key={idx} className="flex flex-col">
+              <span className="text-xs font-semibold text-slate-500">
+                Komoditas: <span style={{ color: entry.color }}>{entry.name}</span>
               </span>
-              <span className="font-bold text-foreground">
-                {entry.value.toLocaleString()} Ton
+              <span className="text-sm font-bold text-slate-800">
+                Volume: {entry.value.toLocaleString("id-ID")} Ton
               </span>
             </div>
           ))}
           {payload.every((p) => p.value === 0) && (
-            <p className="text-[10px] text-text-muted italic text-center">
+            <p className="text-[10px] text-slate-400 italic text-center">
               Tidak ada muatan
             </p>
           )}
@@ -201,11 +194,11 @@ const OperatorDashboard = () => {
       {/* Analytics Section */}
       <div className="grid grid-cols-1 gap-8">
         {/* Trend Chart (Full Width) */}
-        <div className="card h-[500px] flex flex-col p-6 bg-surface-card rounded-lg shadow-card border border-surface-divider">
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+        <div className="rounded-xl bg-white shadow-sm p-6 border border-slate-100 h-[500px] flex flex-col">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <TrendingUp size={20} className="text-primary" />
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <TrendingUp size={20} className="text-blue-600" />
                 Tren Realisasi Muatan Per Jenis Barang (Januari - Desember)
               </h3>
             </div>
@@ -213,7 +206,7 @@ const OperatorDashboard = () => {
             {/* Filters */}
             <div className="flex items-center gap-3 mt-2 md:mt-0">
                <select
-                className="bg-background text-sm font-semibold text-text-secondary border border-surface-divider rounded-lg px-2 py-1 focus:outline-none cursor-pointer hover:border-primary/50"
+                className="bg-slate-50 text-sm font-semibold text-slate-600 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none cursor-pointer hover:border-blue-500/50"
                 value={selectedTrendYear}
                 onChange={(e) => setSelectedTrendYear(Number(e.target.value))}
               >
@@ -223,15 +216,15 @@ const OperatorDashboard = () => {
                   </option>
                 ))}
               </select>
-              <div className="flex bg-background rounded-lg p-1 border border-surface-divider">
+              <div className="flex bg-slate-50 rounded-lg p-1 border border-slate-200">
                 {["Bongkar", "Muat"].map((type) => (
                   <button
                     key={type}
                     onClick={() => setTrendType(type)}
                     className={`px-3 py-1 text-xs font-bold rounded-md transition-all duration-200 ${
                       trendType === type
-                        ? "bg-surface-card text-primary shadow-sm"
-                        : "text-text-muted hover:text-text-secondary"
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
                     {type}
@@ -243,12 +236,12 @@ const OperatorDashboard = () => {
 
           <div className="flex-1 w-full min-w-0 min-h-0 relative mt-4">
             {trendLoading ? (
-              <div className="h-full flex flex-col items-center justify-center text-text-muted animate-pulse">
+              <div className="h-full flex flex-col items-center justify-center text-slate-400 animate-pulse">
                 <Loader2
                   size={32}
-                  className="animate-spin mb-2 text-primary"
+                  className="animate-spin mb-2 text-blue-600"
                 />
-                <span className="text-xs font-medium">
+                <span className="text-xs font-medium uppercase tracking-widest">
                   Memuat data grafik...
                 </span>
               </div>
@@ -262,33 +255,34 @@ const OperatorDashboard = () => {
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
-                      stroke="#E3E8EE"
+                      stroke="#F1F5F9"
                     />
                     <XAxis
                       dataKey="name"
-                      axisLine={true}
+                      axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 11, fill: "#9AA7B5", fontWeight: 600 }}
+                      tick={{ fontSize: 11, fill: "#94A3B8", fontWeight: 600 }}
                       dy={10}
                       padding={{ left: 10, right: 10 }}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fontSize: 11, fill: "#9AA7B5", fontWeight: 600 }}
+                      tick={{ fontSize: 11, fill: "#94A3B8", fontWeight: 600 }}
                       label={{ 
                         value: 'Volume (Ton)', 
                         angle: -90, 
                         position: 'insideLeft',
-                        style: { textAnchor: 'middle', fill: '#9AA7B5', fontSize: 12, fontWeight: 600 }
+                        style: { textAnchor: 'middle', fill: '#94A3B8', fontSize: 12, fontWeight: 600 }
                       }}
+                      tickFormatter={(value) => value.toLocaleString("id-ID")}
                     />
-                    <Tooltip content={<CustomTrendTooltip />} cursor={{ stroke: '#9AA7B5', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                    <Tooltip content={<CustomTrendTooltip />} cursor={{ stroke: '#CBD5E1', strokeWidth: 1, strokeDasharray: '4 4' }} />
                     <Legend 
                       verticalAlign="top" 
                       height={36} 
-                      iconType="plainline"
-                      wrapperStyle={{ top: -10, fontSize: '12px', fontWeight: 600, color: '#6B7C93' }}
+                      iconType="circle"
+                      wrapperStyle={{ top: -10, fontSize: '12px', fontWeight: 600, color: '#64748B' }}
                     />
                     
                     {trendSeries.map((serie, index) => (
@@ -298,8 +292,13 @@ const OperatorDashboard = () => {
                         dataKey={serie}
                         stroke={getColor(serie, index)}
                         strokeWidth={3}
-                        dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: getColor(serie, index) }}
-                        activeDot={{ r: 6, strokeWidth: 0, fill: getColor(serie, index) }}
+                        dot={{ 
+                          r: 5, 
+                          stroke: "#ffffff", 
+                          strokeWidth: 2, 
+                          fill: getColor(serie, index) 
+                        }}
+                        activeDot={{ r: 7, strokeWidth: 0 }}
                         animationDuration={1500}
                       />
                     ))}

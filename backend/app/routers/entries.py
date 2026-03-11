@@ -269,23 +269,21 @@ def save_entries(entry: ShipEntry, user: dict = Depends(get_current_user)):
         # Query untuk menyimpan data ke tabel ship_entries
         # MODIFIED: Default status changed from 'DRAFT' to 'SUBMITTED'
         sql = """INSERT INTO ship_entries (
-            nama_kapal, kategori_pelayaran, loa, grt, 
+            kategori_pelayaran, loa, grt, 
             jenis_kegiatan, berat_ton, jumlah_penumpang,
-            tanggal_kedatangan, tanggal_keberangkatan, tanggal_laporan,
+            tanggal_laporan,
             operator_id, status,
             jenis_muatan, nama_muatan, jumlah_muatan, satuan_muatan, jenis_kemasan,
-            bendera, pemilik_agen, pelabuhan_asal, pelabuhan_tujuan, tanggal_tambat, dermaga, keterangan,
             submitted_at, submit_method
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'SUBMITTED', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), 'MANUAL')"""
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'SUBMITTED', %s, %s, %s, %s, %s, NOW(), 'MANUAL')"""
         
         # Mapping data dari request body ke format tuple untuk MySQL
         values = (
-            entry.nama_kapal, entry.kategori_pelayaran, entry.loa, entry.grt,
+            entry.kategori_pelayaran, entry.loa, entry.grt,
             entry.jenis_kegiatan, entry.berat_ton, entry.jumlah_penumpang,
-            entry.tanggal_kedatangan, entry.tanggal_keberangkatan, entry.tanggal_laporan,
+            entry.tanggal_laporan,
             entry.operator_id,
-            entry.jenis_muatan, entry.nama_muatan, entry.jumlah_muatan, entry.satuan_muatan, entry.jenis_kemasan,
-            entry.bendera, entry.pemilik_agen, entry.pelabuhan_asal, entry.pelabuhan_tujuan, entry.tanggal_tambat, entry.dermaga, entry.keterangan
+            entry.jenis_muatan, entry.nama_muatan, entry.jumlah_muatan, entry.satuan_muatan, entry.jenis_kemasan
         )
         
         cursor.execute(sql, values)
@@ -329,37 +327,26 @@ def update_entry(id: int, entry: ShipEntry, user: dict = Depends(get_current_use
             
         # 2. Update Data
         sql = """UPDATE ship_entries SET
-            nama_kapal = %s,
             kategori_pelayaran = %s,
             loa = %s,
             grt = %s,
             jenis_kegiatan = %s,
             berat_ton = %s,
             jumlah_penumpang = %s,
-            tanggal_kedatangan = %s,
-            tanggal_keberangkatan = %s,
             tanggal_laporan = %s,
             jenis_muatan = %s,
             nama_muatan = %s,
             jumlah_muatan = %s,
             satuan_muatan = %s,
-            jenis_kemasan = %s,
-            bendera = %s,
-            pemilik_agen = %s,
-            pelabuhan_asal = %s,
-            pelabuhan_tujuan = %s,
-            tanggal_tambat = %s,
-            dermaga = %s,
-            keterangan = %s
+            jenis_kemasan = %s
             WHERE id = %s
         """
         
         values = (
-            entry.nama_kapal, entry.kategori_pelayaran, entry.loa, entry.grt,
+            entry.kategori_pelayaran, entry.loa, entry.grt,
             entry.jenis_kegiatan, entry.berat_ton, entry.jumlah_penumpang,
-            entry.tanggal_kedatangan, entry.tanggal_keberangkatan, entry.tanggal_laporan,
+            entry.tanggal_laporan,
             entry.jenis_muatan, entry.nama_muatan, entry.jumlah_muatan, entry.satuan_muatan, entry.jenis_kemasan,
-            entry.bendera, entry.pemilik_agen, entry.pelabuhan_asal, entry.pelabuhan_tujuan, entry.tanggal_tambat, entry.dermaga, entry.keterangan,
             id
         )
         

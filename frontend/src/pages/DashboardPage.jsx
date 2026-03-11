@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -33,31 +33,29 @@ const CustomTrendTooltip = ({ active, payload, label }) => {
           {label}
         </p>
         <div className="space-y-2">
-          {data.details && data.details.length > 0 ? (
-            data.details.map((item, idx) => (
+          {payload.map((p, idx) => {
+            const name = p.name || p.dataKey;
+            const value = p.value || 0;
+            return (
               <div
                 key={idx}
                 className="flex justify-between items-center gap-4 text-xs"
               >
                 <span className="text-text-secondary font-medium">
-                  {item.barang}
+                  {name}
                 </span>
                 <span className="text-foreground font-bold">
-                  {item.volume.toLocaleString()} Ton
+                  {Number(value).toLocaleString()} Ton
                 </span>
               </div>
-            ))
-          ) : (
-            <p className="text-[10px] text-text-muted italic text-center py-1">
-              Tidak ada rincian barang
-            </p>
-          )}
+            );
+          })}
           <div className="border-t border-surface-divider pt-2 mt-2 flex justify-between items-center">
             <span className="text-[10px] uppercase font-bold text-text-muted">
               Total Volume
             </span>
             <span className="text-sm font-black text-primary">
-              {data.total.toLocaleString()} Ton
+              {payload.reduce((sum, p) => sum + (p.value || 0), 0).toLocaleString()} Ton
             </span>
           </div>
         </div>
@@ -75,6 +73,7 @@ const DashboardPage = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [trendType, setTrendType] = useState("Bongkar");
   const [trendData, setTrendData] = useState([]);
+  const [trendSeries, setTrendSeries] = useState([]);
   const [medianValue, setMedianValue] = useState(0);
 
   const [stats, setStats] = useState({
@@ -114,6 +113,7 @@ const DashboardPage = () => {
 
       if (res.data && res.data.data) {
         setTrendData(res.data.data);
+        setTrendSeries(res.data.series || []);
         setMedianValue(res.data.median);
       }
     } catch (err) {
@@ -122,6 +122,28 @@ const DashboardPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // helper for colors
+  const getColor = (name, index) => {
+    const CARGO_COLORS = {
+      "AMM. NITRATE": "#FACC15",
+      AMONIA: "#A855F7",
+      LNG: "#3B82F6",
+      LPG: "#EF4444",
+      PUPUK: "#22C55E",
+      BARANG: "#64748B",
+      DEFAULT: "#94A3B8",
+    };
+    if (CARGO_COLORS[name]) return CARGO_COLORS[name];
+    const colors = [
+      "#F58220",
+      "#E11D48",
+      "#0072CE",
+      "#6DBE45",
+      "#0F2A44",
+    ];
+    return colors[index % colors.length];
   };
 
   return (
@@ -311,22 +333,10 @@ const DashboardPage = () => {
 
             <div style={{ width: "100%", height: 400 }}>
               <ResponsiveContainer>
-                <AreaChart
+                <LineChart
                   data={trendData}
                   margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
                 >
-                  <defs>
-                    <linearGradient
-                      id="gradientTrend"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#0072CE" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#0072CE" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
 
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -386,24 +396,20 @@ const DashboardPage = () => {
                     }}
                   />
 
-                  <Area
-                    name="Volume Realisasi (Ton)"
-                    type="monotone"
-                    dataKey="total"
-                    stroke="#0072CE"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#gradientTrend)"
-                    activeDot={{
-                      r: 6,
-                      fill: "#0072CE",
-                      stroke: "#fff",
-                      strokeWidth: 4,
-                      shadow: "0 4px 10px rgba(0, 114, 206, 0.2)",
-                    }}
-                    animationDuration={1500}
-                  />
-                </AreaChart>
+                  {trendSeries.map((serie, index) => (
+                    <Line
+                      key={serie}
+                      name={serie}
+                      type="monotone"
+                      dataKey={serie}
+                      stroke={getColor(serie, index)}
+                      strokeWidth={3}
+                      dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: getColor(serie, index) }}
+                      activeDot={{ r: 6, strokeWidth: 0, fill: getColor(serie, index) }}
+                      animationDuration={1500}
+                    />
+                  ))}
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </div>

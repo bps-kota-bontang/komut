@@ -130,18 +130,8 @@ def seed_sample_data(
                 day_offset = random.randint(0, (clamp_end - clamp_start).days)
                 tgl = clamp_start + timedelta(days=day_offset)
 
-                ship = random.choice(SHIP_NAMES)
-                flag = random.choice(FLAGS)
                 cat = random.choice(CATEGORIES)
                 act = random.choice(ACTIVITIES)
-                asal = random.choice(PORTS)
-                tujuan = random.choice([p for p in PORTS if p != asal])
-                dermaga = random.choice(BERTHS)
-                pemilik = (
-                    f"PT {random.choice(['Samudra', 'Lautan', 'Pelabuhan', 'Bahari'])} "
-                    f"{random.choice(['Jaya', 'Sejahtera', 'Indah', 'Makmur'])}"
-                )
-                keterangan = f"Seed demo data ({yy}-{mm:02d})"
 
                 jenis_muatan = random.choice(["Barang", "Hewan", "Manusia"])
                 nama_muatan = ""
@@ -150,9 +140,6 @@ def seed_sample_data(
                 jenis_kemasan = ""
                 berat_ton = 0
                 jumlah_penumpang = 0
-                container_status = "-"
-                teus20 = 0
-                teus40 = 0
 
                 if jenis_muatan == "Manusia":
                     nama_muatan = "Penumpang"
@@ -174,17 +161,14 @@ def seed_sample_data(
                     if satuan_muatan in ['Ton', 'MT']:
                         berat_ton = jumlah_muatan
 
-                # 6. Ship Details
+                # 6. Cargo Entry
                 entry = (
-                    ship, # Nama Kapal
                     cat, # Kategori
                     random.uniform(50, 300), # LOA
                     random.uniform(100, 5000), # GRT
                     act, # Jenis Kegiatan
                     round(berat_ton, 2),
                     jumlah_penumpang,
-                    tgl - timedelta(days=2), # Kedatangan
-                    tgl + timedelta(days=1), # Keberangkatan
                     tgl, # Tanggal Laporan
                     op_id,
                     'SUBMITTED', # status
@@ -193,13 +177,6 @@ def seed_sample_data(
                     round(jumlah_muatan, 2),
                     satuan_muatan,
                     jenis_kemasan,
-                    flag, # Bendera
-                    pemilik, # Agen
-                    asal, # Asal
-                    tujuan, # Tujuan
-                    tgl - timedelta(days=1), # Tambat
-                    dermaga, # Dermaga
-                    keterangan, # Keterangan
                     submitted_dt,
                     'AUTO'
                 )
@@ -207,14 +184,13 @@ def seed_sample_data(
 
         if values:
             insert_sql = """INSERT INTO ship_entries (
-                nama_kapal, kategori_pelayaran, loa, grt, 
+                kategori_pelayaran, loa, grt, 
                 jenis_kegiatan, berat_ton, jumlah_penumpang,
-                tanggal_kedatangan, tanggal_keberangkatan, tanggal_laporan,
+                tanggal_laporan,
                 operator_id, status,
                 jenis_muatan, nama_muatan, jumlah_muatan, satuan_muatan, jenis_kemasan,
-                bendera, pemilik_agen, pelabuhan_asal, pelabuhan_tujuan, tanggal_tambat, dermaga, keterangan,
                 submitted_at, submit_method
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
             try:
                 cursor.executemany(insert_sql, values)
                 conn.commit()

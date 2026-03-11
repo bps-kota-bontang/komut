@@ -74,6 +74,13 @@ export const getDashboardTrend = async (year, type) => {
   return response.data;
 };
 
+export const getCommodityDistribution = async (year, operatorId) => {
+  const response = await api.get("/dashboard/distribution", {
+    params: { tahun: year, operator_id: operatorId },
+  });
+  return response.data;
+};
+
 export const getWeeklyTrend = async () => {
   const response = await api.get("/dashboard/weekly");
   return response.data;

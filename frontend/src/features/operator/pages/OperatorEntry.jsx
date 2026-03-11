@@ -14,6 +14,15 @@ import { useAuth } from "../../../context/AuthContext";
 
 const OperatorEntry = () => {
   const { user } = useAuth();
+  // --- PERIOD STATE ---
+  const currentDate = new Date();
+  const monthNames = [
+    "Januari","Februari","Maret","April","Mei","Juni",
+    "Juli","Agustus","September","Oktober","November","Desember",
+  ];
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+
   // --- STATE MANAGEMENT ---
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +39,11 @@ const OperatorEntry = () => {
       if (entries.length === 0) setLoading(true);
       setError(null);
 
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
-
-      // 1. Fetch Main History (Semua status untuk periode berjalan)
+      // 1. Fetch Main History (Sesuaikan dengan periode yang dipilih)
       const mainEntriesRes = await getEntries({
         operator_id: user?.id,
-        tahun: currentYear,
-        bulan: currentMonth,
+        tahun: selectedYear,
+        bulan: selectedMonth,
       });
       setEntries(mainEntriesRes);
     } catch (err) {
@@ -51,7 +57,7 @@ const OperatorEntry = () => {
 
   useEffect(() => {
     if (user?.id) fetchAllData();
-  }, [user?.id]);
+  }, [user?.id, selectedMonth, selectedYear]);
 
   // --- HANDLERS ---
 
@@ -114,14 +120,37 @@ const OperatorEntry = () => {
   return (
     <div className="p-8 space-y-8 min-h-screen bg-slate-50">
       {/* Page Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">
             Entri Laporan Operasional
           </h1>
-          <p className="text-slate-500 mt-1">
+          <div className="mt-1 text-slate-500 text-sm">
             Kelola data kunjungan kapal untuk periode aktif.
-          </p>
+          </div>
+          <div className="mt-2 flex items-center space-x-2 text-sm">
+            <span className="font-semibold">Periode entri:</span>
+            <select
+              className="input-field h-8 text-sm"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            >
+              {monthNames.map((name, idx) => (
+                <option key={idx} value={idx + 1}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input-field h-8 text-sm"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            >
+              {Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i).map((yr) => (
+                <option key={yr} value={yr}>{yr}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -140,6 +169,8 @@ const OperatorEntry = () => {
           onCancel={handleCancelEdit}
           isSubmitting={isSubmittingForm}
           isDisabled={false}
+          entryMonth={selectedMonth}
+          entryYear={selectedYear}
         />
       </div>
     </div>

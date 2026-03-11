@@ -167,17 +167,14 @@ def seed_data():
             if satuan in ['Ton', 'MT']:
                 berat_ton = jumlah
             
-        # 6. Ship Details
+        # 6. Cargo Entry
         entry = (
-            fake.company() + " " + random.choice(['Line', 'Shipping', 'Trans']), # Nama Kapal
             category, # Kategori
             random.uniform(50, 300), # LOA
             random.uniform(100, 5000), # GRT
             activity, # Jenis Kegiatan
             round(berat_ton, 2),
             jumlah_penumpang,
-            created_at - timedelta(days=2), # Kedatangan
-            created_at + timedelta(days=1), # Keberangkatan
             report_date, # Tanggal Laporan
             operator_id,
             status,
@@ -186,13 +183,6 @@ def seed_data():
             round(jumlah, 2),
             satuan,
             kemasan,
-            fake.country(), # Bendera (using country name)
-            fake.company(), # Agen
-            fake.city(), # Asal
-            fake.city(), # Tujuan
-            created_at - timedelta(days=1), # Tambat
-            f"Dermaga {random.choice(['A', 'B', 'C', 'D'])}", # Dermaga
-            fake.text(max_nb_chars=200), # Keterangan
             submitted_at,
             submit_method,
             teus_20,
@@ -203,15 +193,14 @@ def seed_data():
         entries.append(entry)
 
     sql = """INSERT INTO ship_entries (
-        nama_kapal, kategori_pelayaran, loa, grt, 
+        kategori_pelayaran, loa, grt, 
         jenis_kegiatan, berat_ton, jumlah_penumpang,
-        tanggal_kedatangan, tanggal_keberangkatan, tanggal_laporan,
+        tanggal_laporan,
         operator_id, status,
         jenis_muatan, nama_muatan, jumlah_muatan, satuan_muatan, jenis_kemasan,
-        bendera, pemilik_agen, pelabuhan_asal, pelabuhan_tujuan, tanggal_tambat, dermaga, keterangan,
         submitted_at, submit_method,
         teus_20_box, teus_40_box, container_status, created_at
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
     
     # Batch Insert
     batch_size = 100

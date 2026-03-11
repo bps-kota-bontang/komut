@@ -24,7 +24,7 @@ def get_dashboard_monthly(tahun: int, operator_id: Optional[int] = None):
         query = f"""
         SELECT 
             MONTH(tanggal_laporan) as bulan,
-            COUNT(DISTINCT nama_kapal) as total
+            COUNT(*) as total
         FROM ship_entries
         WHERE YEAR(tanggal_laporan) = %s {operator_filter}
         GROUP BY MONTH(tanggal_laporan)
@@ -72,7 +72,7 @@ def get_dashboard_weekly(operator_id: Optional[int] = None):
         query = f"""
         SELECT 
             WEEK(tanggal_laporan) as minggu,
-            COUNT(DISTINCT nama_kapal) as total
+            COUNT(*) as total
         FROM ship_entries
         WHERE tanggal_laporan >= DATE_SUB(CURDATE(), INTERVAL 8 WEEK)
         {op_filter}
@@ -114,7 +114,8 @@ def get_dashboard_trend(tahun: int, jenis_trend: str):
         # Check if input is Activity Type (Bongkar/Muat)
         if jenis_trend in ['Bongkar', 'Muat']:
             filter_activity = jenis_trend
-            col_name = "nama_muatan" # If filtering by activity, we usually want to see commodity breakdown
+            # group by komoditas field for cargo breakdown
+            col_name = "komoditas"
         elif jenis_trend == 'kategori':
             col_name = "kategori_pelayaran"
         elif jenis_trend == 'jenis_muatan':
@@ -122,11 +123,12 @@ def get_dashboard_trend(tahun: int, jenis_trend: str):
             
         sql = f"""
             SELECT 
-                COALESCE(NULLIF({col_name}, ''), komoditas, 'Tanpa Nama') as barang,
-                MONTH(tanggal_kedatangan) as bulan,
+                COALESCE(NULLIF(komoditas, ''), 'Tanpa Nama') as barang,
+                MONTH(tanggal_laporan) as bulan,
                 SUM(jumlah_muatan) as volume
             FROM ship_entries
-            WHERE YEAR(tanggal_kedatangan) = %s
+            WHERE YEAR(tanggal_laporan) = %s
+              AND status IN ('SUBMITTED', 'APPROVED')
         """
         
         params = [tahun]
@@ -135,7 +137,7 @@ def get_dashboard_trend(tahun: int, jenis_trend: str):
             sql += " AND jenis_kegiatan = %s"
             params.append(filter_activity)
             
-        sql += f" GROUP BY {col_name}, MONTH(tanggal_kedatangan)"
+        sql += " GROUP BY barang, MONTH(tanggal_laporan)"
         
         cursor.execute(sql, tuple(params))
         rows = cursor.fetchall()
@@ -194,7 +196,7 @@ def get_summary_tahunan(tahun: int, operator_id: Optional[int] = None):
         query = f"""
         SELECT 
             operator_id,
-            COUNT(DISTINCT nama_kapal) as total_unit,
+            COUNT(*) as total_unit,
             COALESCE(SUM(loa), 0) as total_loa
         FROM ship_entries
         WHERE YEAR(tanggal_laporan) = %s {op_filter}
@@ -235,6 +237,65 @@ def get_dashboard_stats():
             "today_loa": today['total_loa'],
             "all_time_unit": all_time['all_time']
         }
+    finally:
+        cursor.close()
+        conn.close()
+
+@router.get("/dashboard/distribution")
+def get_commodity_distribution(tahun: int, operator_id: int):
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database tidak terhubung")
+    
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Query for monthly commodity volume
+        query = """
+        SELECT 
+            komoditas AS barang, 
+            MONTH(tanggal_laporan) AS bulan,
+            SUM(jumlah_muatan) AS volume 
+        FROM ship_entries 
+        WHERE YEAR(tanggal_laporan) = %s 
+        AND operator_id = %s 
+        AND status = 'SUBMITTED' 
+        GROUP BY komoditas, MONTH(tanggal_laporan)
+        ORDER BY bulan ASC
+        """
+        cursor.execute(query, (tahun, operator_id))
+        rows = cursor.fetchall()
+        
+        # 1. Extract unique Commodity types (Series)
+        unique_cargos = sorted(list(set(r['barang'] for r in rows if r['barang'])))
+
+        # 2. Initialize Jan-Dec structure
+        months_names = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                        "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+        
+        result = []
+        for i in range(1, 13):
+            month_obj = {
+                "name": months_names[i-1],
+                "bulan_index": i
+            }
+            # Initialize all cargos to 0
+            for cargo in unique_cargos:
+                month_obj[cargo] = 0
+
+            # Fill with actual data
+            month_rows = [r for r in rows if r['bulan'] == i]
+            for r in month_rows:
+                if r['barang']:
+                    month_obj[r['barang']] = float(r['volume'] or 0)
+            
+            result.append(month_obj)
+        
+        return {
+            "series": unique_cargos,
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()

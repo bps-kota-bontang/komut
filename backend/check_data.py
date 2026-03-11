@@ -14,7 +14,7 @@ try:
     cursor = conn.cursor(dictionary=True)
     
     print("--- DATA SHIP ENTRIES ---")
-    cursor.execute("SELECT id, nama_kapal, jenis_kegiatan, tanggal_kedatangan, MONTH(tanggal_kedatangan) as bln FROM ship_entries")
+    cursor.execute("SELECT id, jenis_kegiatan, tanggal_laporan, MONTH(tanggal_laporan) as bln FROM ship_entries")
     rows = cursor.fetchall()
     for r in rows:
         print(r)

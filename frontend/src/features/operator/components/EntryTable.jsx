@@ -47,13 +47,7 @@ const EntryTable = ({ data, onEdit, onDelete, isDisabled }) => {
           <thead className="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="px-6 py-4 font-semibold w-[150px]">
-                Tanggal Kedatangan
-              </th>
-              <th className="px-6 py-4 font-semibold w-[200px]">
-                Nama Kapal / Bendera
-              </th>
-              <th className="px-6 py-4 font-semibold w-[200px]">
-                Rute & Dermaga
+                ID Laporan & Tanggal
               </th>
               <th className="px-6 py-4 font-semibold text-center w-[100px]">
                 LOA (m)
@@ -76,7 +70,7 @@ const EntryTable = ({ data, onEdit, onDelete, isDisabled }) => {
             {currentItems.length === 0 ? (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="6"
                   className="px-6 py-12 text-center text-slate-400"
                 >
                   <div className="flex flex-col items-center justify-center space-y-3">
@@ -105,42 +99,16 @@ const EntryTable = ({ data, onEdit, onDelete, isDisabled }) => {
                   <td className="px-6 py-4 whitespace-nowrap align-top">
                     <div className="flex flex-col gap-1">
                       <span className="font-bold text-slate-800 text-sm">
-                        {formatDate(item.tanggal_kedatangan)}
+                        Report #{item.id}
                       </span>
                       <span className="text-xs text-slate-400 font-medium">
                         Lapor: {formatDate(item.tanggal_laporan)}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 align-top">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-slate-900">
-                        {item.nama_kapal}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {item.bendera || "-"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col text-xs">
-                      <div className="flex items-center space-x-1">
-                        <span className="text-slate-700 font-medium">
-                          {item.pelabuhan_asal || "Unknown"}
-                        </span>
-                        <span className="text-slate-400">→</span>
-                        <span className="text-slate-700 font-medium">
-                          {item.pelabuhan_tujuan || "Unknown"}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-blue-600 bg-blue-50 px-1 rounded mt-1 w-fit">
-                        {item.dermaga || "Belum Ditentukan"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">{item.loa}</td>
-                  <td className="px-6 py-4 text-center">{item.grt}</td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4 text-center align-top">{item.loa}</td>
+                  <td className="px-6 py-4 text-center align-top">{item.grt}</td>
+                  <td className="px-6 py-4 text-center align-top">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                         item.jenis_kegiatan === "Bongkar"
@@ -151,7 +119,7 @@ const EntryTable = ({ data, onEdit, onDelete, isDisabled }) => {
                       {item.jenis_kegiatan}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-mono text-sm">
+                  <td className="px-6 py-4 font-mono text-sm align-top">
                     {/* Display Komoditas Logic */}
                     <div className="flex flex-col">
                       <div className="flex items-center gap-2">
@@ -178,7 +146,7 @@ const EntryTable = ({ data, onEdit, onDelete, isDisabled }) => {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right align-top">
                     <div className="flex justify-end space-x-1">
                       <button
                         onClick={() => onEdit(item)}
